@@ -1,2 +1,116 @@
-# Smart-Fire-Detection-IoT
-A smart fire prevention and response circuit combining IoT (ESP8266) and Digital Electronics (Logic Gates + LM393 failsafe). The system detects fire or overheating, triggers a water pump and buzzer, and includes a hardware failsafe mechanism that works even if the microcontroller fails.
+# Smart Fire Detection and Response System (IoT + Logic Gate Failsafe)
+
+A smart fire prevention and response circuit combining **IoT (ESP8266)** and **Digital Electronics (Logic Gates + LM393 failsafe)**.
+The system detects fire or overheating, triggers a **water pump and buzzer**, and includes a **hardware failsafe mechanism** that works even if the microcontroller fails.
+
+---
+
+## Features
+
+* Real-time fire detection using **IR sensor**
+* Temperature monitoring via **LM35 sensor**
+* Automatic **water pump + buzzer** activation
+* **Hardware failsafe** with LM393 comparator and logic gates
+* Works independently even if ESP8266 crashes
+* Modular and easy to extend (IoT alerts, smoke sensors, etc.)
+
+---
+
+## Components Used
+
+| Component                     | Quantity | Description                                  |
+| ----------------------------- | -------- | -------------------------------------------- |
+| ESP8266 (NodeMCU)             | 1        | Main microcontroller                         |
+| IR Proximity Sensor           | 1        | Detects flame or fire                        |
+| LM35 Temperature Sensor       | 1        | Provides analog temperature reading          |
+| DHT11 Sensor                  | 1        | Monitors ambient humidity and temperature    |
+| Relay Module                  | 2        | Controls pump and buzzer                     |
+| Water Pump                    | 1        | Sprays water automatically on fire detection |
+| Buzzer                        | 1        | Triggers alarm                               |
+| LM393 Comparator              | 1        | Failsafe overheat detection circuit          |
+| Logic Gates (IC 7432 or 4071) | 1        | Combines signals for failsafe trigger        |
+| Misc                          | —        | Breadboard, jumper wires, resistors, etc.    |
+
+---
+
+## Circuit Description
+
+1. **Fire Detection (IR Sensor):**
+   When the IR sensor detects flame, it sends a LOW signal to the ESP8266.
+   The microcontroller activates the relay, turning ON the pump and buzzer.
+
+2. **Temperature Monitoring (LM35 + LM393):**
+   LM35 continuously measures temperature.
+   The LM393 comparator checks if it exceeds a preset threshold.
+
+   * If it does, LM393 output goes HIGH → triggers OR gate → activates relay (pump/buzzer).
+
+3. **Failsafe Logic (Hardware):**
+   Both the ESP8266 output and LM393 output are connected to an **OR gate**.
+   If either detects danger, the OR gate activates the relay.
+   This ensures operation even if ESP8266 fails.
+
+4. **System Reset:**
+   Once fire and temperature levels drop to normal, outputs return LOW and relays turn off.
+
+---
+
+## Pin Connections (ESP8266)
+
+| Component         | ESP8266 Pin | Description                      |
+| ----------------- | ----------- | -------------------------------- |
+| IR Sensor OUT     | D5 (GPIO14) | Fire detection input             |
+| Relay (Pump) IN   | D1 (GPIO5)  | Controls water pump              |
+| Relay (Buzzer) IN | D2 (GPIO4)  | Controls buzzer                  |
+| DHT11 Data        | D4 (GPIO2)  | Temperature + humidity           |
+| LM35 OUT          | A0          | Analog temperature input         |
+| LM393 OUT         | D6 (GPIO12) | Failsafe trigger input           |
+| GND               | GND         | Common ground for all components |
+| VCC               | 3.3V / 5V   | Power supply depending on module |
+
+---
+
+## Safety & Reliability Features
+
+* Hardware-level **failsafe trigger** (works even if ESP8266 stops responding)
+* Adjustable **temperature threshold** (via potentiometer on LM393)
+* Automatic reset once conditions normalize
+* Modular, testable design
+
+---
+
+## Working Flow
+
+```text
+IR Sensor detects fire  → ESP8266 → Relay ON → Pump + Buzzer ON
+LM35 detects overheat   → LM393 → OR Gate → Relay ON → Pump + Buzzer ON
+Both Normal → Relay OFF → Pump + Buzzer OFF
+```
+
+---
+
+## Project Media
+
+📷 **Images:**
+Add your circuit photo under `/media/working_photo.jpg`
+
+🎥 **Demo Video:**
+Add your demo in `/media/demo_video.mp4`
+
+---
+
+## Future Scope
+
+* Add Wi-Fi alerts (via Blynk, Telegram, or MQTT)
+* Integrate smoke/gas sensors
+* Add OLED display for live status
+* Solar/battery backup integration
+
+## Author
+
+**Parth Doshi**
+[LinkedIn](https://linkedin.com/in/parthdoshi404) • [GitHub](https://github.com/AlcesOzdst) • [Website](https://alcesozdst.com)
+
+## License
+
+This project is licensed under the **MIT License** — feel free to use, modify, and share with credit.

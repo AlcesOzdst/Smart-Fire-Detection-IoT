@@ -1,7 +1,8 @@
 # Smart Fire Detection and Response System (IoT + Logic Gate Failsafe)
 
-A smart fire prevention and response circuit combining **IoT (ESP8266)** and **Digital Electronics (Logic Gates + LM393 failsafe)**.
-The system detects fire or overheating, triggers a **water pump and buzzer**, and includes a **hardware failsafe mechanism** that works even if the microcontroller fails.
+This project is a **smart fire detection and suppression system** built using the **ESP8266** microcontroller, designed to automatically **detect fire** and respond instantly by **activating a water pump**. The system integrates **multiple sensors**, including an **IR flame sensor** and a **temperature sensor (LM35)**, along with a **relay-driven actuator** to control external devices such as **pumps** or **buzzers**.
+
+To ensure maximum safety and reliability, the setup also includes a hardware-based failsafe mechanism using a **LM393 comparator and logic gates**, which triggers the emergency response even if the microcontroller fails or a sensor malfunctions.
 
 ---
 

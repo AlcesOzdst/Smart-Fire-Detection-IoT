@@ -62,10 +62,8 @@ To ensure maximum safety and reliability, the setup also includes a hardware-bas
 | ----------------- | ----------- | -------------------------------- |
 | IR Sensor OUT     | D5 (GPIO14) | Fire detection input             |
 | Relay (Pump) IN   | D1 (GPIO5)  | Controls water pump              |
-| Relay (Buzzer) IN | D2 (GPIO4)  | Controls buzzer                  |
+| Buzzer            | D2 (GPIO4)  | Controls buzzer                  |
 | DHT11 Data        | D4 (GPIO2)  | Temperature + humidity           |
-| LM35 OUT          | A0          | Analog temperature input         |
-| LM393 OUT         | D6 (GPIO12) | Failsafe trigger input           |
 | GND               | GND         | Common ground for all components |
 | VCC               | 3.3V / 5V   | Power supply depending on module |
 

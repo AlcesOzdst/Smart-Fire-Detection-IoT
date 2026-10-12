@@ -1,115 +1,119 @@
-# Smart Fire Detection and Response System (IoT + Logic Gate Failsafe)
+# Smart Fire Detection and Response System
 
-This project is a **smart fire detection and suppression system** built using the **ESP8266** microcontroller, designed to automatically **detect fire** and respond instantly by **activating a water pump**. The system integrates **multiple sensors**, including an **IR flame sensor** and a **temperature sensor (LM35)**, along with a **relay-driven actuator** to control external devices such as **pumps** or **buzzers**.
+A smart fire and overheat detection system engineered for the ESP32 microcontroller, featuring real-time optical flame sensing, ambient temperature and humidity tracking, direct acoustic alarm triggering, and an integrated local web telemetry dashboard over Web Serial.
 
-To ensure maximum safety and reliability, the setup also includes a hardware-based failsafe mechanism using a **LM393 comparator and logic gates**, which triggers the emergency response even if the microcontroller fails or a sensor malfunctions.
+## System Overview
 
----
+The system monitors environmental and optical indicators to identify fire and overheating conditions. When a threat is detected, the microcontroller instantly triggers an acoustic alarm and transmits diagnostic telemetry to a connected workstation console.
 
-## Features
+### Key Capabilities
 
-* Real-time fire detection using **IR sensor**
-* Temperature monitoring via **LM35 sensor**
-* Automatic **water pump + buzzer** activation
-* **Hardware failsafe** with LM393 comparator and logic gates
-* Works independently even if ESP8266 crashes
-* Modular and easy to extend (IoT alerts, smoke sensors, etc.)
+* Optical flame detection using an infrared receiver with adjustable sensitivity.
+* Environmental monitoring via a DHT11 temperature and humidity sensor.
+* Direct acoustic alarm actuation using a dedicated buzzer output.
+* Real-time local web telemetry dashboard running directly in modern web browsers via Web Serial API.
+* Dual-stream serial reporting: machine-readable JSON data for dashboards alongside human-readable diagnostic text.
+* Interactive serial command interface for remote manual testing and override.
 
----
+## Hardware Configuration
 
-## Components Used
+### Bill of Materials
 
-| Component                     | Quantity | Description                                  |
-| ----------------------------- | -------- | -------------------------------------------- |
-| ESP8266 (NodeMCU)             | 1        | Main microcontroller                         |
-| IR Proximity Sensor           | 1        | Detects flame or fire                        |
-| LM35 Temperature Sensor       | 1        | Provides analog temperature reading          |
-| DHT11 Sensor                  | 1        | Monitors ambient humidity and temperature    |
-| Relay Module                  | 2        | Controls pump and buzzer                     |
-| Water Pump                    | 1        | Sprays water automatically on fire detection |
-| Buzzer                        | 1        | Triggers alarm                               |
-| LM393 Comparator              | 1        | Failsafe overheat detection circuit          |
-| Logic Gates (IC 7432 or 4071) | 1        | Combines signals for failsafe trigger        |
-| Misc                          | —        | Breadboard, jumper wires, resistors, etc.    |
+| Component | Quantity | Description |
+| :--- | :--- | :--- |
+| ESP32 DevKit V1 | 1 | 30-pin or 38-pin dual-core microcontroller |
+| IR Flame Sensor Module | 1 | Digital infrared flame receiver with LM393 comparator |
+| DHT11 Sensor | 1 | Single-bus digital temperature and humidity sensor |
+| Piezo / Active Buzzer | 1 | Acoustic alarm indicator driven directly from GPIO |
+| Jumper Wires and Breadboard | Various | Circuit interconnects |
 
----
+### Pinout Specifications
 
-## Circuit Description
+| Component | Pin | ESP32 GPIO | Logic Level | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| IR Flame Sensor | OUT | GPIO 18 | Digital Input | Active LOW on flame detection |
+| DHT11 Sensor | DATA | GPIO 4 | Digital I/O | Temperature and humidity communication |
+| Buzzer (+) | Anode | GPIO 27 | Digital Output | Active HIGH alarm trigger |
+| Buzzer (-) | Cathode | GND | Ground | Ground reference |
+| Sensor Power | VCC | 3V3 | Power (3.3V) | Regulated logic power rail |
+| System Ground | GND | GND | Ground | Common reference |
 
-1. **Fire Detection (IR Sensor):**
-   When the IR sensor detects flame, it sends a LOW signal to the ESP8266.
-   The microcontroller activates the relay, turning ON the pump and buzzer.
-
-2. **Temperature Monitoring (LM35 + LM393):**
-   LM35 continuously measures temperature.
-   The LM393 comparator checks if it exceeds a preset threshold.
-
-   * If it does, LM393 output goes HIGH → triggers OR gate → activates relay (pump/buzzer).
-
-3. **Failsafe Logic (Hardware):**
-   Both the ESP8266 output and LM393 output are connected to an **OR gate**.
-   If either detects danger, the OR gate activates the relay.
-   This ensures operation even if ESP8266 fails.
-
-4. **System Reset:**
-   Once fire and temperature levels drop to normal, outputs return LOW and relays turn off.
-
----
-
-## Pin Connections (ESP8266)
-
-| Component         | ESP8266 Pin | Description                      |
-| ----------------- | ----------- | -------------------------------- |
-| IR Sensor OUT     | D5 (GPIO14) | Fire detection input             |
-| Relay (Pump) IN   | D1 (GPIO5)  | Controls water pump              |
-| Buzzer            | D2 (GPIO4)  | Controls buzzer                  |
-| DHT11 Data        | D4 (GPIO2)  | Temperature + humidity           |
-| GND               | GND         | Common ground for all components |
-| VCC               | 3.3V / 5V   | Power supply depending on module |
-
----
-
-## Safety & Reliability Features
-
-* Hardware-level **failsafe trigger** (works even if ESP8266 stops responding)
-* Adjustable **temperature threshold** (via potentiometer on LM393)
-* Automatic reset once conditions normalize
-* Modular, testable design
-
----
-
-## Working Flow
+## Circuit Schematic
 
 ```text
-IR Sensor detects fire  → ESP8266 → Relay ON → Pump + Buzzer ON
-LM35 detects overheat   → LM393 → OR Gate → Relay ON → Pump + Buzzer ON
-Both Normal → Relay OFF → Pump + Buzzer OFF
+                        +--------------------------------+
+                        |     ESP32 DEVKIT V1 (30-Pin)   |
+                        +--------------------------------+
+                        |                                |
+   [IR Flame Sensor]    |                                |
+   VCC ---------------->| 3V3                            |
+   GND ---------------->| GND                            |
+   OUT ---------------->| GPIO 18 (Digital Input)        |
+                        |                                |
+   [DHT11 Sensor]       |                                |
+   VCC ---------------->| 3V3                            |
+   GND ---------------->| GND                            |
+   DATA --------------->| GPIO 4  (Single-Bus Data)      |
+                        |                                |
+   [Acoustic Buzzer]    |                                |
+   (+) Anode <----------| GPIO 27 (Digital Output)       |
+   (-) Cathode -------->| GND                            |
+                        +--------------------------------+
+                                       |
+                                  [Micro-USB]
+                                       |
+                                       v
+                        +--------------------------------+
+                        | Local Web Telemetry Dashboard  |
+                        | (dashboard/index.html @115200) |
+                        +--------------------------------+
 ```
 
----
+## Local Web Telemetry Dashboard
 
-## Project Media
+A dedicated, standalone local dashboard is provided in the `dashboard/` directory.
 
-📷 **Images:**
-Add your circuit photo under `/media/working_photo.jpg`
+### Dashboard Features
 
-🎥 **Demo Video:**
-Add your demo in `/media/demo_video.mp4`
+* Direct Web Serial connectivity: Connects to the ESP32 via USB at 115200 baud without external servers.
+* Dynamic optical flame radar and status display.
+* Real-time rolling canvas chart for temperature and humidity.
+* Synthesized browser emergency siren via Web Audio API.
+* Manual control buttons: Force alarm, silence alarm, and auto mode.
+* Raw serial diagnostic console with export capability.
 
----
+### Launching the Dashboard
 
-## Future Scope
+1. Open `dashboard/index.html` in Google Chrome, Microsoft Edge, or any Chromium-based browser.
+2. Click "Connect ESP32 (COM)" in the header.
+3. Select your serial port (for example, COM7) and click Connect.
 
-* Add Wi-Fi alerts (via Blynk, Telegram, or MQTT)
-* Integrate smoke/gas sensors
-* Add OLED display for live status
-* Solar/battery backup integration
+## Software Architecture
+
+### Firmware Structure
+
+* `src/main.cpp`: Primary firmware source for PlatformIO.
+* `code/esp32_fire_suppression.ino`: Arduino IDE compatible version.
+* `platformio.ini`: Build configuration targeting Espressif 32.
+
+### Serial Commands
+
+When connected to the serial monitor at 115200 baud:
+
+* `1`: Force buzzer alarm ON (manual override).
+* `0`: Force buzzer alarm OFF (silence).
+* `a`: Return to automatic sensor monitoring mode.
+
+## Project Documentation
+
+* Detailed engineering specifications: See `ESP32_HANDBOOK.md` or `ESP32_HANDBOOK.pdf`.
+* Legacy ESP8266 and relay implementation: See `code/fire_supression.ino`.
 
 ## Author
 
-**Parth Doshi**
-[LinkedIn](https://linkedin.com/in/parthdoshi404) • [GitHub](https://github.com/AlcesOzdst) • [Website](https://alcesozdst.com)
+Parth Doshi
+[LinkedIn](https://linkedin.com/in/parthdoshi404) | [GitHub](https://github.com/AlcesOzdst) | [Website](https://alcesozdst.com)
 
 ## License
 
-This project is licensed under the **MIT License** — feel free to use, modify, and share with credit.
+This project is licensed under the MIT License.

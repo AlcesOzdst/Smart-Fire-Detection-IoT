@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Fire Detection & Suppression: Live Telemetry Console</title>
+  <meta name="description" content="Local Real-time Web Dashboard for ESP32 Smart Fire & Overheat Detection System">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark">
+  <!-- Emergency Alert Banner -->
+  <div id="emergency-banner" class="emergency-banner hidden" role="alert">
+    <div class="banner-content">
+      <span class="pulse-icon">🔥</span>
+      <div class="banner-text">
+        <h2 id="banner-title">CRITICAL FIRE / OVERHEAT ALARM DETECTED!</h2>
+        <p id="banner-subtitle">Buzzer active on GPIO 27. Sensor thresholds exceeded.</p>
+      </div>
+      <button id="silence-alarm-btn" class="banner-btn" title="Silence Alarm">Silence Buzzer</button>
+    </div>
+  </div>
+
+  <div class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand-group">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Smart Fire Sentinel <span class="badge-iot">ESP32 IoT</span></h1>
+          <p class="brand-subtitle">Industrial-grade Fire & Overheat Telemetry Monitor</p>
+        </div>
+      </div>
+
+      <!-- Connection & Action Toolbar -->
+      <div class="header-actions">
+        <div class="status-pill" id="connection-pill">
+          <span class="status-dot disconnected"></span>
+          <span id="connection-status-text">Disconnected</span>
+        </div>
+
+        <button id="serial-connect-btn" class="btn btn-primary" title="Connect to ESP32 over USB Serial">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span id="serial-btn-text">Connect ESP32 (COM)</span>
+        </button>
+
+        <button id="demo-mode-btn" class="btn btn-secondary" title="Simulate real-time data">
+          <span class="btn-icon">⚡</span>
+          <span id="demo-btn-text">Demo Mode: OFF</span>
+        </button>
+
+        <button id="audio-toggle-btn" class="btn btn-icon-only" title="Toggle browser audio alarm" aria-label="Toggle Siren Audio">
+          <span id="audio-icon">🔊</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-grid">
+      <!-- 1. Flame Status Radar Card -->
+      <section class="card flame-card" id="card-flame">
+        <div class="card-header">
+          <span class="card-badge">IR Optical Sensor</span>
+          <span class="pin-tag">GPIO 18</span>
+        </div>
+        <div class="card-body centered">
+          <div class="radar-visualizer" id="radar-ring">
+            <div class="radar-sweep"></div>
+            <div class="flame-symbol" id="flame-icon">🛡️</div>
+          </div>
+          <div class="status-label-group">
+            <h3 class="metric-status" id="flame-status-text">CLEAR</h3>
+            <p class="metric-caption" id="flame-subtext">No infrared flame radiation detected</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Temperature Metric Card -->
+      <section class="card metric-card" id="card-temp">
+        <div class="card-header">
+          <span class="card-badge">Temperature</span>
+          <span class="pin-tag">DHT11 (GPIO 4)</span>
+        </div>
+        <div class="card-body">
+          <div class="metric-display">
+            <span class="metric-number" id="temp-value">--</span>
+            <span class="metric-unit">°C</span>
+          </div>
+          <div class="gauge-bar-track">
+            <div class="gauge-bar-fill" id="temp-gauge-fill" style="width: 0%;"></div>
+          </div>
+          <div class="metric-submetrics">
+            <span>Threshold: <strong class="warn-color">45.0°C</strong></span>
+            <span id="temp-fahrenheit">-- °F</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Humidity Metric Card -->
+      <section class="card metric-card" id="card-humidity">
+        <div class="card-header">
+          <span class="card-badge">Relative Humidity</span>
+          <span class="pin-tag">DHT11 (GPIO 4)</span>
+        </div>
+        <div class="card-body">
+          <div class="metric-display">
+            <span class="metric-number" id="humidity-value">--</span>
+            <span class="metric-unit">%</span>
+          </div>
+          <div class="gauge-bar-track">
+            <div class="gauge-bar-fill humidity-fill" id="humidity-gauge-fill" style="width: 0%;"></div>
+          </div>
+          <div class="metric-submetrics">
+            <span>Environment: <strong id="comfort-label">Normal</strong></span>
+            <span id="dew-point">Dew: --°C</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Actuator (Buzzer) Status Card -->
+      <section class="card actuator-card" id="card-buzzer">
+        <div class="card-header">
+          <span class="card-badge">Acoustic Alarm</span>
+          <span class="pin-tag">Direct (GPIO 27)</span>
+        </div>
+        <div class="card-body">
+          <div class="actuator-status-box" id="buzzer-status-box">
+            <div class="actuator-icon" id="buzzer-icon">🔕</div>
+            <div class="actuator-info">
+              <span class="actuator-state" id="buzzer-state-text">STANDBY</span>
+              <span class="actuator-mode" id="buzzer-mode-text">Automatic Sensing Mode</span>
+            </div>
+          </div>
+          <!-- Manual Quick Controls -->
+          <div class="actuator-controls">
+            <button id="btn-force-on" class="btn btn-control-on" title="Force Buzzer ON">Force Alarm</button>
+            <button id="btn-force-off" class="btn btn-control-off" title="Force Buzzer OFF">Silence</button>
+            <button id="btn-auto-mode" class="btn btn-control-auto" title="Reset to Auto Mode">Auto Mode</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Real-Time Telemetry Chart -->
+      <section class="card chart-card grid-span-2" id="card-chart">
+        <div class="card-header">
+          <div>
+            <h3 class="section-title">Real-Time Environmental Trend</h3>
+            <p class="section-subtitle">Live 60-second multi-parameter rolling stream</p>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-color temp-line"></span> Temperature (°C)</span>
+            <span class="legend-item"><span class="legend-color hum-line"></span> Humidity (%)</span>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="telemetry-chart" width="800" height="240"></canvas>
+        </div>
+      </section>
+
+      <!-- 6. Serial Terminal & Event Log -->
+      <section class="card terminal-card grid-span-2" id="card-terminal">
+        <div class="card-header">
+          <div>
+            <h3 class="section-title">Diagnostic Telemetry Console</h3>
+            <p class="section-subtitle">Raw Serial Feed from ESP32 (115200 Baud)</p>
+          </div>
+          <div class="terminal-actions">
+            <button id="clear-terminal-btn" class="btn btn-sm btn-ghost">Clear</button>
+            <button id="export-log-btn" class="btn btn-sm btn-ghost">Export Log</button>
+          </div>
+        </div>
+        <div class="terminal-body" id="terminal-feed">
+          <div class="terminal-line system">[SYSTEM] Dashboard initialized. Click 'Connect ESP32 (COM)' to open live Web Serial stream.</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Smart Fire Detection System &bull; ESP32 Direct Buzzer Edition &bull; Port: <code id="footer-port">COM7 / Web Serial</code></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
